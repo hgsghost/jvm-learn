@@ -1,5 +1,6 @@
 package class2;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -15,11 +16,9 @@ public class InterpreterTest2 {
         return i;
     }
     public static void main(String[] args) {
-        Map<Integer,Instruction> instructionMap=parse(args[0]);
-        /*instructionMap.put(0,new IConst1());
-        instructionMap.put(1,new ILoad0());
-        instructionMap.put(2,new IStore0());
-        instructionMap.put(3,new IReturn());*/
+        /*File file=new File("");
+        System.out.println(file.getAbsolutePath());*/
+        Map<Integer,Instruction> instructionMap=parse("doc"+File.separator+"test.bc");
         Interpreter.run(new Frame(),instructionMap);
         System.out.println("Hello World!");
     }
