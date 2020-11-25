@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class InterpreterTest2 {
             System.out.println("file not found ?");
             return null;
         }
+
 
         if (rawLines.isEmpty()) {
             System.out.println("empty file");
@@ -133,6 +135,62 @@ public class InterpreterTest2 {
             frame.pcCount+=offSet();
         }
     }
+    static class Bipush implements  Instruction{
+        private int position;
+        public Bipush(int position){
+            this.position=position;
+        }
+        @Override
+        public void eval(Frame frame) {
+            frame.pcCount=position;
+        }
+    }
+    static class If_Icmpgt implements  Instruction{
+        private int position;
+        public If_Icmpgt(int position){
+            this.position=position;
+        }
+        @Override
+        public void eval(Frame frame) {
+            if(frame.operationStack.pop()<frame.operationStack.pop()){
+                frame.pcCount=position;
+            }else{
+                frame.pcCount+=offSet();
+            }
+        }
+    }
+    static class Iadd implements  Instruction{
+
+        @Override
+        public void eval(Frame frame) {
+            frame.operationStack.push(frame.operationStack.pop()+frame.operationStack.pop());
+             frame.pcCount+=offSet();
+        }
+    }
+    static class Iinc implements  Instruction{
+        private int localVariablePosition;
+        private int num;
+        public Iinc(int localVariablePosition,int num){
+            this.localVariablePosition=localVariablePosition;
+            this.num=num;
+        }
+        @Override
+        public void eval(Frame frame) {
+            frame.localVariable.put(localVariablePosition,frame.localVariable.get(localVariablePosition)+num);
+            frame.pcCount+=offSet();
+        }
+    }
+    static class Goto implements  Instruction{
+        private int position;
+        public Goto(int position){
+            this.position=position;
+        }
+        @Override
+        public void eval(Frame frame) {
+            frame.pcCount=position;
+        }
+    }
+
     static  class Interpreter{
         public static void run (Frame frame,Map<Integer,Instruction> instructionMap ){
             do{
