@@ -1,10 +1,11 @@
 package class2;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,8 @@ public class InterpreterTest2 {
     public static void main(String[] args) {
         /*File file=new File("");
         System.out.println(file.getAbsolutePath());*/
-        Map<Integer,Instruction> instructionMap=parse("doc"+File.separator+"test.bc");
+        Map<Integer,Instruction> instructionMap=parse("doc"+File.separator+ "misc/Sum10.bc");
+        System.out.println("999"+ JSONObject.toJSONString(instructionMap));
         Interpreter.run(new Frame(),instructionMap);
         System.out.println("Hello World!");
     }
@@ -56,17 +58,47 @@ public class InterpreterTest2 {
 
             Instruction instruction = null;
             switch (inst.toLowerCase()) {
+                case "iconst_0":
+                    instruction = new IConst0();
+                    break;
                 case "iconst_1":
                     instruction = new IConst1();
                     break;
                 case "istore_0":
                     instruction = new IStore0();
                     break;
+                case "istore_1":
+                    instruction = new IStore1();
+                    break;
+                case "istore_2":
+                    instruction = new IStore2();
+                    break;
                 case "iload_0":
                     instruction = new ILoad0();
                     break;
+                case "iload_1":
+                    instruction = new ILoad1();
+                    break;
+                case "iload_2":
+                    instruction = new ILoad2();
+                    break;
                 case "ireturn":
                     instruction = new IReturn();
+                    break;
+                case "bipush":
+                    instruction = new Bipush(Byte.parseByte(terms[2]));
+                    break;
+                case "if_icmpgt":
+                    instruction = new If_Icmpgt(Integer.parseInt(terms[2]));
+                    break;
+                case "iadd":
+                    instruction = new Iadd();
+                    break;
+                case "iinc":
+                    instruction = new Iinc(Integer.parseInt(terms[2]), Integer.parseInt(terms[3]));
+                    break;
+                case "goto":
+                    instruction = new Goto(Short.parseShort(terms[2]));
                     break;
                 default:
                     break;
@@ -100,11 +132,13 @@ public class InterpreterTest2 {
             return list.remove(0);
         }
     }
-    interface  Instruction{
-        default int offSet(){
-            return 1;
+
+    static class IConst0 implements  Instruction{
+        @Override
+        public void eval(Frame frame) {
+            frame.operationStack.push(0);
+            frame.pcCount+=offSet();
         }
-        void eval(Frame frame);
     }
     static class IConst1 implements  Instruction{
         @Override
@@ -120,10 +154,38 @@ public class InterpreterTest2 {
             frame.pcCount+=offSet();
         }
     }
+    static class IStore1 implements  Instruction{
+        @Override
+        public void eval(Frame frame) {
+            frame.localVariable.put(1,frame.operationStack.pop());
+            frame.pcCount+=offSet();
+        }
+    }
+    static class IStore2 implements  Instruction{
+        @Override
+        public void eval(Frame frame) {
+            frame.localVariable.put(2,frame.operationStack.pop());
+            frame.pcCount+=offSet();
+        }
+    }
     static class ILoad0 implements  Instruction{
         @Override
         public void eval(Frame frame) {
             frame.operationStack.push(frame.localVariable.get(0));
+            frame.pcCount+=offSet();
+        }
+    }
+    static class ILoad1 implements  Instruction{
+        @Override
+        public void eval(Frame frame) {
+            frame.operationStack.push(frame.localVariable.get(1));
+            frame.pcCount+=offSet();
+        }
+    }
+    static class ILoad2 implements  Instruction{
+        @Override
+        public void eval(Frame frame) {
+            frame.operationStack.push(frame.localVariable.get(2));
             frame.pcCount+=offSet();
         }
     }
@@ -136,14 +198,20 @@ public class InterpreterTest2 {
         }
     }
     static class Bipush implements  Instruction{
-        private int position;
-        public Bipush(int position){
-            this.position=position;
+        private int num;
+        public Bipush(int num){
+            this.num=num;
         }
         @Override
         public void eval(Frame frame) {
-            frame.pcCount=position;
+            frame.operationStack.push(num);
+            frame.pcCount+=offSet();
         }
+        @Override
+        public int offSet(){
+            return 2;
+        }
+
     }
     static class If_Icmpgt implements  Instruction{
         private int position;
@@ -155,8 +223,12 @@ public class InterpreterTest2 {
             if(frame.operationStack.pop()<frame.operationStack.pop()){
                 frame.pcCount=position;
             }else{
-                frame.pcCount+=offSet();
+                frame.pcCount+=this.offSet();
             }
+        }
+        @Override
+        public int offSet(){
+            return 3;
         }
     }
     static class Iadd implements  Instruction{
@@ -177,7 +249,11 @@ public class InterpreterTest2 {
         @Override
         public void eval(Frame frame) {
             frame.localVariable.put(localVariablePosition,frame.localVariable.get(localVariablePosition)+num);
-            frame.pcCount+=offSet();
+            frame.pcCount+=this.offSet();
+        }
+        @Override
+        public int offSet(){
+            return 3;
         }
     }
     static class Goto implements  Instruction{
@@ -188,6 +264,10 @@ public class InterpreterTest2 {
         @Override
         public void eval(Frame frame) {
             frame.pcCount=position;
+        }
+        @Override
+        public int offSet(){
+            return 3;
         }
     }
 
